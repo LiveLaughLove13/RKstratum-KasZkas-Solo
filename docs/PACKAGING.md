@@ -1,0 +1,37 @@
+# Packaging layout (CLI, AppImage, desktop GUI)
+
+This repository matches **kaspanet/rusty-kaspa** [`bridge/`](https://github.com/kaspanet/rusty-kaspa/tree/master/bridge): the Stratum bridge **crate and sources** live under `bridge/`, not at the repository root.
+
+| Path | Role |
+| --- | --- |
+| `Cargo.toml` (root) | **Workspace**: `members = ["bridge", "bridge-tauri/src-tauri"]`, shared `[workspace.dependencies]`, `[patch.crates-io]` for `serde_nested_with`. Single **root `Cargo.lock`** for `stratum-bridge` and `rkstratum-bridge-desktop`. |
+| `bridge/` | `kaspa-stratum-bridge` package: `src/`, `static/`, `appimage/`, `config.yaml`, `docs/`. |
+| `bridge/appimage/` | Linux **AppImage** scripts (same behavior as upstream `bridge/appimage/`). |
+| `bridge-tauri/` | **RKStratum Bridge** Tauri shell; `bridge-tauri/src-tauri/Cargo.toml` depends on `kaspa-stratum-bridge` via `path = "../../bridge"`. |
+
+## Linux AppImage (CLI binary)
+
+Requires a **musl** release build (same **kaspanet `musl-toolchain`** tarball as `rusty-kaspa` / BridgeGUI), then AppImage packaging.
+
+From the repo root (set `GITHUB_WORKSPACE` locally if unset, e.g. `export GITHUB_WORKSPACE="$(pwd)"`):
+
+```bash
+source musl-toolchain/build.sh
+cd "$GITHUB_WORKSPACE"
+export RUSTFLAGS="$RUSTFLAGS -C link-arg=-Wl,--allow-multiple-definition"
+cargo build --release --locked -p kaspa-stratum-bridge \
+  --target x86_64-unknown-linux-musl --features rkstratum_cpu_miner
+bash bridge/appimage/build.sh "$(git describe --tags --always)"
+```
+
+AppImage **256×256** icon: `build.sh` rasterizes **`bridge-tauri/src-tauri/icons/kaspa-icon-raster.svg`** (square canvas, `preserveAspectRatio` — same artwork as Tauri) via `rsvg-convert` when available; otherwise it copies the committed fallback **`bridge/appimage/stratum-bridge.png`**. Regenerate the fallback (from repo root, with Node):
+
+`npx @resvg/resvg-js-cli --fit-width 256 bridge-tauri/src-tauri/icons/kaspa-icon-raster.svg bridge/appimage/stratum-bridge.png`
+
+The wide dashboard asset `bridge/static/assets/kaspa.svg` is **not** used for AppImage rasterization (forcing it to 256×256 would stretch the mark).
+
+## Desktop GUI (Tauri)
+
+See [`bridge-tauri/README.md`](../bridge-tauri/README.md). The window title and bundle name are **RKStratum Bridge** (`bridge-tauri/src-tauri/tauri.conf.json`).
+
+Tagged releases ship **`rkstratum-bridge-desktop`** for Windows, macOS (arm + intel), and **Linux x86_64** (glibc + WebKitGTK). The Linux GUI binary is inside the **`stratum-bridge-linux-amd64`** `.tar.gz` alongside the musl CLI `stratum-bridge`.

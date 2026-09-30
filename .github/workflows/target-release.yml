@@ -1,0 +1,107 @@
+# Lean promote path for dual-external (Kas+ZKAS :6666).
+# Builds CLI only — no AppImage, desktop GUI, musl, or Docker.
+# Use this for fast GH assets; use scripts/Promote-DualExternal.ps1 for
+# minimal-downtime swap on the Windows host that already runs the bridge.
+name: Target Release (dual-external)
+
+on:
+  push:
+    tags:
+      - "dual-v*"
+  workflow_dispatch:
+    inputs:
+      create_release:
+        description: "Publish a GitHub Release from this run"
+        type: boolean
+        default: true
+      tag_name:
+        description: "Release tag (workflow_dispatch only; leave empty to use run id)"
+        required: false
+        type: string
+
+permissions:
+  contents: write
+
+jobs:
+  build-windows-cli:
+    name: Build Windows CLI
+    runs-on: windows-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install Rust toolchain
+        uses: actions-rust-lang/setup-rust-toolchain@v1
+        with:
+          toolchain: 1.91.0
+          cache: true
+          cache-key: dual-target-windows-${{ hashFiles('Cargo.lock') }}
+
+      - name: Install protoc
+        uses: arduino/setup-protoc@v3
+        with:
+          version: "25.3"
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build stratum-bridge (release)
+        run: cargo build --locked --release -p kaspa-stratum-bridge --bin stratum-bridge
+
+      - name: Stage asset
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p staging
+          cp README.md README-DUAL-EXTERNAL.md LICENSE staging/ 2>/dev/null || true
+          cp target/release/stratum-bridge.exe staging/stratum-bridge.exe
+          # Never ship live bridge/config.yaml (gitignored secrets). Document flags only.
+          printf '%s\n' \
+            "Dual-external target release (Windows amd64)." \
+            "Run: stratum-bridge.exe --config <your-config.yaml> --node-mode external" \
+            "Promote on host: scripts/Promote-DualExternal.ps1" \
+            > staging/PROMOTE.txt
+
+      - name: Zip asset
+        shell: pwsh
+        run: Compress-Archive -Path staging\* -DestinationPath stratum-bridge-dual-windows-amd64.zip
+
+      - name: Upload workflow artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: stratum-bridge-dual-windows-amd64
+          path: stratum-bridge-dual-windows-amd64.zip
+
+  publish-release:
+    name: Publish GitHub Release
+    needs: [build-windows-cli]
+    if: >-
+      startsWith(github.ref, 'refs/tags/dual-v') ||
+      (github.event_name == 'workflow_dispatch' && inputs.create_release)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download workflow artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: dist
+          merge-multiple: true
+
+      - name: Resolve release tag
+        id: tag
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [[ "${GITHUB_REF}" == refs/tags/* ]]; then
+            echo "name=${GITHUB_REF_NAME}" >> "$GITHUB_OUTPUT"
+          elif [[ -n "${{ inputs.tag_name }}" ]]; then
+            echo "name=${{ inputs.tag_name }}" >> "$GITHUB_OUTPUT"
+          else
+            echo "name=dual-run-${GITHUB_RUN_ID}" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Publish release and upload assets
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.tag.outputs.name }}
+          name: Dual-external ${{ steps.tag.outputs.name }}
+          generate_release_notes: true
+          files: dist/**
+          fail_on_unmatched_files: true

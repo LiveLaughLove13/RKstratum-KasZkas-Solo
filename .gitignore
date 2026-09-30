@@ -1,0 +1,112 @@
+# ============================================
+# stratum-dual-external — PRIVATE business code
+# Push ONLY to LiveLaughLove13 private GitHub.
+# NEVER push to firecash or any public upstream.
+# ============================================
+
+# Rust build artifacts
+/target/
+/target-*/
+bridge/target/
+bridge/target-*/
+!Cargo.lock
+
+# AppImage tooling / outputs
+bridge/appimage/appimagetool-x86_64.AppImage
+bridge/appimage/StratumBridge.AppDir/
+stratum-bridge-*-x86_64.AppImage
+
+# Vendored / local toolchain
+_vendor/
+musl-toolchain/
+target-zkas/
+target-zkas-src/
+
+# Live runtime configs & secrets — commit examples only
+bridge/config.yaml
+bridge/config.yml
+config.yaml
+config.yml
+*.local.yaml
+*.local.yml
+*.local.toml
+*.local.json
+.env
+.env.*
+!.env.example
+*.key
+*.seed
+*.mnemonic
+*.wallet
+*.walletdb
+**/kaspa-pool-secrets/
+**/pool-secrets/
+*secret*
+*secrets*
+*credential*
+*credentials*
+*token*
+*password*
+
+# Pool / node data
+*.sqlite
+*.sqlite-*
+*.sqlite-wal
+*.sqlite-shm
+*.sqlite-journal
+pool.sqlite
+
+# Logs, CSV, soak monitors — LOCAL ONLY
+/logs/
+logs/
+*.log
+rustbridge_*.log
+*.csv
+*.tsv
+*.progress.txt
+*.err
+*.stamp
+*.pid
+build.log
+
+# Private keys / certs
+*.pem
+*.p8
+*.p12
+*.pfx
+*.crt
+*.cer
+*.csr
+*.der
+
+# Backup / temp
+/backups/
+backups/
+*.backup
+*.tmp
+*.bak
+*.bak-*
+*.orig
+*.old
+*.rej
+**/__pycache__/
+*.pyc
+
+# IDE / OS
+.vscode/
+.idea/
+.cursor/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Optional local toolchain overrides
+rustfmt.toml
+clippy.toml
+
+# Packaged release binaries (attach on GitHub Releases only)
+/dist/
+
