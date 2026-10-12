@@ -1,0 +1,89 @@
+# RKstratum Kas + ZKAS Solo
+
+**Binary releases only** — click-and-run solo stratum for Kaspa + ZKAS merge-mining.
+
+One program embeds Kaspa + ZKAS nodes, opens a local Stratum for your ASICs, and keeps a **permanent 1% hosting fee** (not configurable).
+
+| | |
+|---|---|
+| **Latest** | [v2.1.1](../../releases/tag/v2.1.1) |
+| Stratum | `stratum+tcp://YOUR-PC-LAN-IP:7666` |
+| Dashboard | `http://127.0.0.1:3133/` |
+
+## Linux one-liner
+
+Downloads the latest **binary** tarball + SHA256 from Releases (not source). Picks Linux x86_64 or ARM64 from `uname -m` when that asset is on the release.
+
+```bash
+curl -fsSL https://github.com/LiveLaughLove13/RKstratum-KasZkas-Solo/releases/latest/download/install.sh | sh
+```
+
+Then `cd ~/RKstratum-KasZkas-Solo && ./run.sh`. Override the folder with `RKSTRATUM_INSTALL_DIR=/path`.
+
+## Download
+
+Get assets from **[Releases](../../releases)**:
+
+| Platform | Asset |
+|----------|--------|
+| Windows x64 | `RKstratum-KasZkas-Solo-windows-x64-v2.1.1.zip` |
+| Linux x64 | `RKstratum-KasZkas-Solo-linux-x64-v2.1.1.tar.gz` |
+| Linux ARM64 / macOS | Attached on a release only after that package is built (Pi = 64-bit OS; macOS is built on a Mac) |
+
+Each asset has a matching `*.sha256` checksum — verify before running.
+
+### Verify checksums
+
+**Windows (PowerShell):**
+
+```powershell
+Get-FileHash .\RKstratum-KasZkas-Solo-windows-x64-v2.1.1.zip -Algorithm SHA256
+Get-Content .\RKstratum-KasZkas-Solo-windows-x64-v2.1.1.sha256
+```
+
+**Linux:**
+
+```bash
+sha256sum -c RKstratum-KasZkas-Solo-linux-x64-v2.1.1.sha256
+```
+
+## Windows
+
+1. Unzip the Windows zip.
+2. Double-click `RKstratumKasZkasSolo.exe`.
+3. Wait for **NODES READY**.
+4. Point ASICs at `stratum+tcp://YOUR-LAN-IP:7666`.
+
+   Username: `kaspa:YOUR_ADDRESS`, your DotK name (`dablacksplash` / `dablacksplash.rig1`), or your KNS name (`dablacksplash.kas` / `dablacksplash.kas.rig1`). Bare names are DotK only. Password: your `zkas:` address, or `x`.
+
+Data: `%LOCALAPPDATA%\RKstratumKasZkasSolo\`
+
+## macOS
+
+When a `macos-arm64` or `macos-x64` zip is on the release:
+
+1. Unzip it.
+2. In Terminal: `cd` into that folder and run `./run.sh`.
+3. Wait for **NODES READY**. Gatekeeper may ask you to allow the binary the first time.
+
+Data: `~/.RKstratumKasZkasSolo/`
+
+## Linux
+
+1. Extract the tar.gz.
+2. Open a terminal in that folder and run `./run.sh` (or `./RKstratumKasZkasSolo`). Keep the terminal open.
+3. Wait for **NODES READY**.
+4. Same ASIC URL / dashboard as above.
+
+Data: `~/.RKstratumKasZkasSolo/`
+
+## Notes
+
+- Raspberry Pi needs **64-bit** Raspberry Pi OS and preferably **8 GB RAM** (two full nodes). 32-bit Pi images are not supported.
+- First sync of Kaspa + ZKAS needs substantial SSD space and time.
+- To open the dashboard from another PC: `--web-dashboard-port 0.0.0.0:3133` then `http://THIS-MACHINE-LAN-IP:3133/`.
+- Allow inbound TCP **7666** (stratum) and **16811** (ZKAS P2P) if needed.
+- Do not run this at the same time as another local Kaspa/ZKAS node on the default RPC ports.
+- Hosting fee is hardcoded at 1%. Editing any local config cannot disable it.
+- v2.1.1 embeds [zkas-v1.0.11](https://github.com/firecash/zkas-rusty/releases/tag/zkas-v1.0.11). Merge mining stays `ZKMM` until ZKas DAA 6,983,500, then switches to [`ZKM1`](https://zkas.info/docs/mining/#zkm1). Upgrade before that fork.
+- **This repository does not include source code** — binaries and docs only.
