@@ -1,0 +1,7 @@
+# Binaries-only GitHub tree - packages attach on Releases, not in git
+/dist/
+*.zip
+*.tar.gz
+*.exe
+RKstratumKasZkasSolo
+target/
